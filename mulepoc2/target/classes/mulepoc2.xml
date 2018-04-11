@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:metadata="http://www.mulesoft.org/schema/mule/metadata" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd"><spring:beans>
+<spring:bean class="com.cg.mulepoc2.Details" name="detailsObj" id="Bean" scope="singleton"></spring:bean>
+</spring:beans>
+    <flow name="TransformToPOJO">
+        <set-variable variableName="ath" value="#[message.inboundProperties.'http.uri.params'.ath]" doc:name="Variable"/>
+        <dw:transform-message doc:name="Transform Message" metadata:id="a81acf03-885c-4be8-a52a-abb8e9c57efe">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+---
+{
+	emailId: payload.emailId,
+	password: payload.password,
+	userName: payload.userName
+} as :object {
+	class : "com.cg.mulepoc2.Details"
+}]]></dw:set-payload>
+        </dw:transform-message>
+        <flow-ref name="checkCreditFlow" doc:name="checkCreditFlow"/>
+        <logger level="INFO" doc:name="Logger"/>
+    </flow>
+    <flow name="checkCreditFlow">
+        <choice doc:name="Choice">
+            <when expression="#[flowVars.ath==&quot;Test&quot;]">
+                <invoke object-ref="detailsObj" method="isTestValid" doc:name="isTestValid" methodArguments="#[payload.emailId],#[payload.userName],#[payload.password]" name="isTestValid"/>
+            </when>
+            <when expression="#[flowVars.ath==&quot;Dev&quot;]">
+                <invoke object-ref="detailsObj" method="isDevValid" doc:name="isDevValid" name="isDevValid" methodArguments="#[payload.emailId],#[payload.userName],#[payload.password]"/>
+            </when>
+            <when expression="#[flowVars.ath==&quot;Prod&quot;]">
+                <invoke object-ref="detailsObj" method="isProdValid" doc:name="isProdValid" name="isProdValid" methodArguments="#[payload.userName],#[payload.emailId],#[payload.password]"/>
+            </when>
+            <otherwise>
+                <set-property propertyName="Content-Type" value="text" doc:name="Property"/>
+                <set-payload value="URI entered is not correct" doc:name="Set Payload"/>
+            </otherwise>
+        </choice>
+        <set-payload value="#[payload]" doc:name="Set Payload"/>
+        <logger level="INFO" doc:name="Logger"/>
+    </flow>
+</mule>

@@ -1,0 +1,11 @@
+{
+    "inputMessageMetadata": {},
+    "outputMessageMetadata": {
+        "messagePayload": {
+            "connectorName": "#_custom_mule_metadata_type_#",
+            "typeId": "credentails"
+        }
+    },
+    "id": "eae8307e-d18d-4282-9cad-0c3549c3ed63",
+    "version": "5.2.0.0"
+}
